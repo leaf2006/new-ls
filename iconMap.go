@@ -117,7 +117,6 @@ var folderIconMap = map[string]string{
 	"fonts":    "\uf031", // 
 
 	// --- 逻辑分层 ---
-	"src":      "\ue7ad", // 
 	"app":      "\ue712", // 
 	"internal": "\uf023", // 
 	"pkg":      "\ufb2e", // 󰏞
@@ -132,6 +131,7 @@ var folderIconMap = map[string]string{
 }
 
 var normalFolderIcon = "\uf07b" //
+
 func IconMap(file os.DirEntry) string {
 
 	if file.IsDir() {

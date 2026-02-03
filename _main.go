@@ -6,14 +6,27 @@ import (
 	"log"
 	"os"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/urfave/cli/v3"
+	// "github.com/fatih/color"
 )
 
 var (
 	version = "v0.0.1"
 )
+
+// func OutputReadDir (filePath string) string {
+// 	files ,err := os.ReadDir(filePath)
+// 	if err != nil {
+// 		var error string = fmt.Sprint(err)
+// 		return error
+// 	}
+// 	for fileCount := 0; fileCount < len(files); fileCount++ {
+// 		fileResult := files[fileCount].Name()
+// 		return fileResult
+// 	}
+// 	return ""
+// }
 
 func main() {
 	cmd := &cli.Command{
@@ -57,13 +70,10 @@ func main() {
 				}
 
 				if Args.Len() != 0 {
-					FilePath = Args.First()
-
+					FilePath = Args.First() // 获取路径
 				} else {
 					FilePath = "."
 				}
-				var outputTitle bool
-				outputTitle = false
 
 				files, err := os.ReadDir(FilePath)
 				if err != nil {
@@ -71,43 +81,28 @@ func main() {
 					return err
 				}
 
-				normalFormat := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent) // 文件模式
+				if isSimple { // 简化输出模式
+					// simpleFormat := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0) //TODO:很有问题，需要获取终端宽度并计算
+					for fileCount, file := range files {
+						if enableOutputAllFiles == false && strings.HasPrefix(file.Name(), ".") { //TODO:我个人认为带"."的文件不需要隐藏
+							continue
+						}
 
-				for fileCount, file := range files {
-					if enableOutputAllFiles == false && strings.HasPrefix(file.Name(), ".") {
-						continue
-					}
-
-					fileIcon := IconMap(file)
-
-					if isSimple { // simple mode
-						outputSimple := fmt.Sprintf(" %s %s ", fileIcon, file.Name())
+						fileIcon := IconMap(file)
+						output := fmt.Sprintf(" %s %s ", fileIcon, file.Name())
 						if fileCount == len(files)-1 {
-							fmt.Printf("%s\n", outputSimple)
+							fmt.Printf("%s\n", output)
+							// fmt.Fprintf(simpleFormat, "%s\t\n", output)
 						} else {
-							fmt.Printf("%s", outputSimple)
+							fmt.Printf("%s", output)
+							// fmt.Fprintf(simpleFormat, "%s\t", output)
 						}
-					} else { // normal mode
-						normalFileName := fmt.Sprintf("%s %s", fileIcon, file.Name()) // 文件名 带图标
-						normalFileSize, _ := FileInfo(file, FilePath)                 // 文件大小（字节）
-						_, normalFileLastWriteTime := FileInfo(file, FilePath)        // 上次修改时间
-						normalFileMode := FileMode(file)
-
-						if outputTitle == false {
-							fmt.Fprintln(normalFormat, "Mode\tLastWriteTime\tSize\tName")
-							fmt.Fprintln(normalFormat, "----\t-------------\t----\t----")
-							outputTitle = true
-						}
-
-						fmt.Fprintf(normalFormat, "%s\t%s\t%s\t%s\n", normalFileMode, normalFileLastWriteTime, normalFileSize, normalFileName)
 
 					}
+					// simpleFormat.Flush()
+				} else { //普通输出模式
+					normalFormat := tabwriter.
 				}
-
-				if !isSimple {
-					normalFormat.Flush()
-				}
-
 			}
 			return nil
 		},
