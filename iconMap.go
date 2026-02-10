@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var fileIconMap = map[string]string{
@@ -141,7 +142,7 @@ func IconMap(file os.DirEntry) string {
 			return normalFolderIcon
 		}
 	} else {
-		ext := filepath.Ext(file.Name())
+		ext := strings.ToLower(filepath.Ext(file.Name()))
 		if fileIcon, ok := fileIconMap[ext]; ok {
 			return fileIcon
 		} else {

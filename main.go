@@ -6,14 +6,29 @@ import (
 	"log"
 	"os"
 	"strings"
-	"text/tabwriter"
 
+	// "text/tabwriter"
+
+	"github.com/fatih/color"
 	"github.com/urfave/cli/v3"
 )
 
 var (
-	version = "v0.0.1"
+	version    = "v0.0.1"
+	TitleColor = color.New(color.FgHiGreen, color.Bold)
+	// ApplicationColor = color.New(color.FgHiGreen)
+	// FolderColor      = color.New(color.FgBlue)
+	// FileColor        = color.New(color.FgWhite)
 )
+
+type FileRow struct {
+	Mode  string
+	Time  string
+	Size  string
+	Name  string
+	Icon  string
+	IsDir bool
+}
 
 func main() {
 	cmd := &cli.Command{
@@ -49,11 +64,10 @@ func main() {
 				Args := cmd.Args()
 				var FilePath string
 				var enableOutputAllFiles bool
+				enableOutputAllFiles = false
 
 				if isOutputAllFiles {
 					enableOutputAllFiles = true
-				} else {
-					enableOutputAllFiles = false
 				}
 
 				if Args.Len() != 0 {
@@ -62,8 +76,6 @@ func main() {
 				} else {
 					FilePath = "."
 				}
-				var outputTitle bool
-				outputTitle = false
 
 				files, err := os.ReadDir(FilePath)
 				if err != nil {
@@ -71,43 +83,56 @@ func main() {
 					return err
 				}
 
-				normalFormat := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', tabwriter.TabIndent) // 文件模式
-
-				for fileCount, file := range files {
+				var rows []FileRow
+				maxSizeLen := 4 //default size length
+				for _, file := range files {
 					if enableOutputAllFiles == false && strings.HasPrefix(file.Name(), ".") {
 						continue
 					}
 
-					fileIcon := IconMap(file)
-
-					if isSimple { // simple mode
-						outputSimple := fmt.Sprintf(" %s %s ", fileIcon, file.Name())
-						if fileCount == len(files)-1 {
-							fmt.Printf("%s\n", outputSimple)
-						} else {
-							fmt.Printf("%s", outputSimple)
-						}
-					} else { // normal mode
-						normalFileName := fmt.Sprintf("%s %s", fileIcon, file.Name()) // 文件名 带图标
-						normalFileSize, _ := FileInfo(file, FilePath)                 // 文件大小（字节）
-						_, normalFileLastWriteTime := FileInfo(file, FilePath)        // 上次修改时间
-						normalFileMode := FileMode(file)
-
-						if outputTitle == false {
-							fmt.Fprintln(normalFormat, "Mode\tLastWriteTime\tSize\tName")
-							fmt.Fprintln(normalFormat, "----\t-------------\t----\t----")
-							outputTitle = true
-						}
-
-						fmt.Fprintf(normalFormat, "%s\t%s\t%s\t%s\n", normalFileMode, normalFileLastWriteTime, normalFileSize, normalFileName)
-
+					modeStr := FileMode(file)
+					sizeStr, timeStr := FileInfo(file, FilePath)
+					isDirBool := file.IsDir()
+					// 更新最大宽度：如果当前文件大小字符串长度超过了目前的记录，就更新
+					if len(sizeStr) > maxSizeLen {
+						maxSizeLen = len(sizeStr)
 					}
-				}
 
-				if !isSimple {
-					normalFormat.Flush()
+					rows = append(rows, FileRow{
+						Mode: modeStr,
+						Time: timeStr,
+						Size: sizeStr,
+						Name: ColorFormatter(file, isDirBool),
+						// Name:  file.Name(),
+						Icon:  IconMap(file),
+						IsDir: isDirBool,
+					})
 				}
+				if isSimple {
+					// TODO 暂时先不搞
+				}
+				// normal output
+				TitleColor.Printf("%-10s  %-16s  %-*s  %s\n", "Mode", "LastWriteTime", maxSizeLen, "Size", "Name")
+				dashSize := strings.Repeat("-", maxSizeLen)
+				TitleColor.Printf("%-10s  %-16s  %-*s  %s\n", "--------", "-------------", maxSizeLen, dashSize, "----")
 
+				for _, row := range rows {
+					// var namePrinter *color.Color
+					// TODO:目前思路是用新的ColorFormatter函数，使用namePrinter.Printf输出，如果该函数返回值为nil，则使用fmt.Printf输出。
+					/*
+							具体示例，与本项目无关
+							if namePrinter != nil {
+						        namePrinter.Printf("%s %s\n", row.Icon, row.Name) // 使用带颜色的输出
+						    } else {
+						        fmt.Printf("%s %s\n", row.Icon, row.Name) // 回退到普通输出
+						    }
+						}
+					*/
+					fmt.Printf("%-10s  ", row.Mode)
+					fmt.Printf("%-16s  ", row.Time)
+					fmt.Printf("%*s  ", maxSizeLen, row.Size)
+					fmt.Printf("%s %s\n", row.Icon, row.Name)
+				}
 			}
 			return nil
 		},
