@@ -46,56 +46,62 @@ func FileMode(file os.DirEntry) string {
 	return fileMode
 }
 
-func ColorFormatter(file os.DirEntry, isDir bool) string {
-	var (
-		isExecutable bool
-		// TitleColor       = color.New(color.FgHiGreen, color.Bold).SprintFunc()
-		ApplicationColor = color.New(color.FgHiGreen).SprintFunc()
-		FolderColor      = color.New(color.FgBlue).SprintFunc()
-		// FileColor        = color.New(color.FgWhite).SprintFunc()
-	)
-	fileName := file.Name()
-	info, _ := file.Info()
-	isExecutable = info.Mode().Perm()&0111 != 0 // 判断文件是否为可执行文件，如果是则值为true，反则为false
-	if isDir == true {
-		return FolderColor(fileName)
-	} else {
-		ext := strings.ToLower(filepath.Ext(file.Name()))
-		if runtime.GOOS == "windows" && ext == ".exe" || ext == ".msi" || ext == ".bat" || ext == ".cmd" || ext == ".ps1" {
-			return ApplicationColor(fileName)
-		} else {
-			if isExecutable == true {
-				return ApplicationColor(fileName)
-			}
-		}
-	}
-	return fileName
-}
-
-// func ColorFormatter(file os.DirEntry, isDir bool) *color.Color {
+// 这里暂时弃用
+// func ColorFormatter(file os.DirEntry, isDir bool) string {
 // 	var (
 // 		isExecutable bool
 // 		// TitleColor       = color.New(color.FgHiGreen, color.Bold).SprintFunc()
-// 		ExecutableColor = color.New(color.FgHiGreen)
-// 		FolderColor     = color.New(color.FgBlue)
+// 		ApplicationColor = color.New(color.FgHiGreen).SprintFunc()
+// 		FolderColor      = color.New(color.FgBlue).SprintFunc()
 // 		// FileColor        = color.New(color.FgWhite).SprintFunc()
 // 	)
-// 	// fileName := file.Name()
+// 	fileName := file.Name()
 // 	info, _ := file.Info()
 // 	isExecutable = info.Mode().Perm()&0111 != 0 // 判断文件是否为可执行文件，如果是则值为true，反则为false
 // 	if isDir == true {
-// 		return FolderColor
+// 		return FolderColor(fileName)
 // 	} else {
 // 		ext := strings.ToLower(filepath.Ext(file.Name()))
-// 		if runtime.GOOS == "windows" {
-// 			if ext == ".exe" || ext == ".msi" || ext == ".bat" || ext == ".cmd" || ext == ".ps1" {
-// 				return ExecutableColor
-// 			}
+// 		if runtime.GOOS == "windows" && ext == ".exe" || ext == ".msi" || ext == ".bat" || ext == ".cmd" || ext == ".ps1" {
+// 			return ApplicationColor(fileName)
 // 		} else {
 // 			if isExecutable == true {
-// 				return ExecutableColor
+// 				return ApplicationColor(fileName)
 // 			}
 // 		}
 // 	}
-// 	return nil
+// 	return fileName
 // }
+
+func ColorFormatter(file os.DirEntry, isDir bool, isSimpleColor bool) *color.Color {
+	var (
+		isExecutable bool
+		// TitleColor       = color.New(color.FgHiGreen, color.Bold).SprintFunc()
+		ExecutableColor   = color.New(color.FgHiGreen)
+		FolderColorSimple = color.New(color.FgBlue)             // 普通蓝色
+		FolderColor       = color.New(color.BgBlue, color.Bold) // 背景蓝色（powershell-style）
+		// FileColor        = color.New(color.FgWhite).SprintFunc()
+	)
+	// fileName := file.Name()
+	info, _ := file.Info()
+	isExecutable = info.Mode().Perm()&0111 != 0 // 判断文件是否为可执行文件，如果是则值为true，反则为false
+	if isDir == true {
+		if isSimpleColor == true {
+			return FolderColorSimple
+		} else {
+			return FolderColor
+		}
+	} else {
+		ext := strings.ToLower(filepath.Ext(file.Name()))
+		if runtime.GOOS == "windows" {
+			if ext == ".exe" || ext == ".msi" || ext == ".bat" || ext == ".cmd" || ext == ".ps1" {
+				return ExecutableColor
+			}
+		} else {
+			if isExecutable == true {
+				return ExecutableColor
+			}
+		}
+	}
+	return nil // 普通颜色输出
+}

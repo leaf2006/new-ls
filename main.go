@@ -22,12 +22,13 @@ var (
 )
 
 type FileRow struct {
-	Mode  string
-	Time  string
-	Size  string
-	Name  string
-	Icon  string
-	IsDir bool
+	RawFile os.DirEntry
+	Mode    string
+	Time    string
+	Size    string
+	Name    string
+	Icon    string
+	IsDir   bool
 }
 
 func main() {
@@ -64,6 +65,7 @@ func main() {
 				Args := cmd.Args()
 				var FilePath string
 				var enableOutputAllFiles bool
+				var isSimpleColor bool
 				enableOutputAllFiles = false
 
 				if isOutputAllFiles {
@@ -99,39 +101,40 @@ func main() {
 					}
 
 					rows = append(rows, FileRow{
-						Mode: modeStr,
-						Time: timeStr,
-						Size: sizeStr,
-						Name: ColorFormatter(file, isDirBool),
-						// Name:  file.Name(),
+						RawFile: file,
+						Mode:    modeStr,
+						Time:    timeStr,
+						Size:    sizeStr,
+						// Name: ColorFormatter(file, isDirBool),
+						Name:  file.Name(),
 						Icon:  IconMap(file),
 						IsDir: isDirBool,
 					})
 				}
 				if isSimple {
+					isSimpleColor = true
 					// TODO 暂时先不搞
 				}
 				// normal output
+				isSimpleColor = false
 				TitleColor.Printf("%-10s  %-16s  %-*s  %s\n", "Mode", "LastWriteTime", maxSizeLen, "Size", "Name")
 				dashSize := strings.Repeat("-", maxSizeLen)
 				TitleColor.Printf("%-10s  %-16s  %-*s  %s\n", "--------", "-------------", maxSizeLen, dashSize, "----")
 
 				for _, row := range rows {
-					// var namePrinter *color.Color
-					// TODO:目前思路是用新的ColorFormatter函数，使用namePrinter.Printf输出，如果该函数返回值为nil，则使用fmt.Printf输出。
-					/*
-							具体示例，与本项目无关
-							if namePrinter != nil {
-						        namePrinter.Printf("%s %s\n", row.Icon, row.Name) // 使用带颜色的输出
-						    } else {
-						        fmt.Printf("%s %s\n", row.Icon, row.Name) // 回退到普通输出
-						    }
-						}
-					*/
+					var namePrinter *color.Color
 					fmt.Printf("%-10s  ", row.Mode)
 					fmt.Printf("%-16s  ", row.Time)
 					fmt.Printf("%*s  ", maxSizeLen, row.Size)
-					fmt.Printf("%s %s\n", row.Icon, row.Name)
+
+					namePrinter = ColorFormatter(row.RawFile, row.IsDir, isSimpleColor)
+					if namePrinter != nil {
+						namePrinter.Printf("%s %s", row.Icon, row.Name)
+						fmt.Printf("\n") //消除蓝色底色色块溢出的问题
+					} else {
+						fmt.Printf("%s %s\n", row.Icon, row.Name)
+					}
+
 				}
 			}
 			return nil
