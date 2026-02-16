@@ -56,17 +56,29 @@ func Commands() {
 				}
 
 				var filepath string
+				var enableEntrySimple bool
 				if Args.Len() > 0 {
 					filepath = Args.First()
 				}
-				_, err := core.Entry(filepath, enableOutputAllFiles) //传递至internal/core/entry.go
-				if err != nil {
-					return err
-				}
+				// _, err := core.Entry(filepath, enableOutputAllFiles) //传递至internal/core/entry.go
+				// if err != nil {
+				// 	return err
+				// }
 
 				if isSimple {
+					enableEntrySimple = true
+					_, err := core.Entry(filepath, enableOutputAllFiles, enableEntrySimple) //传递至internal/core/entry.go
+					if err != nil {
+						return err
+					}
 					output.SimpleOutput()
 					return nil
+				}
+
+				enableEntrySimple = false                                               // normal output
+				_, err := core.Entry(filepath, enableOutputAllFiles, enableEntrySimple) //传递至internal/core/entry.go
+				if err != nil {
+					return err
 				}
 				output.NormalOutput()
 			}
