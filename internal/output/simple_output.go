@@ -12,7 +12,6 @@ import (
 var columnsCount int
 
 func SimpleOutput() {
-	// TODO:未完工，仅供测试
 	rows := core.Rows
 	isSimpleColor := true
 	TTYWidth, isTTY := render.GetTerminalWidth()

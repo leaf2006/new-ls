@@ -15,15 +15,15 @@ func NormalOutput() {
 	rows := core.Rows
 	isSimpleColor := false
 
-	TitleColor.Printf("%-10s  %-16s  %-*s  %s\n", "Mode", "LastWriteTime", core.MaxSizeLen, "Size", "Name")
+	TitleColor.Printf("%-10s    %-16s    %-*s    %s\n", "Mode", "LastWriteTime", core.MaxSizeLen, "Size", "Name")
 	dashSize := strings.Repeat("-", core.MaxSizeLen)
-	TitleColor.Printf("%-10s  %-16s  %-*s  %s\n", "----", "-------------", core.MaxSizeLen, dashSize, "----")
+	TitleColor.Printf("%-10s    %-16s    %-*s    %s\n", "----", "-------------", core.MaxSizeLen, dashSize, "----")
 
 	for _, row := range rows {
 		var namePrinter *color.Color
-		fmt.Printf("%-10s  ", row.Mode)
-		fmt.Printf("%-16s  ", row.Time)
-		fmt.Printf("%*s  ", core.MaxSizeLen, row.Size)
+		fmt.Printf("%-10s    ", row.Mode)
+		fmt.Printf("%-16s    ", row.Time)
+		fmt.Printf("%*s    ", core.MaxSizeLen, row.Size)
 
 		namePrinter = render.ColorFormatter(row.RawFile, row.IsDir, isSimpleColor)
 		if namePrinter != nil {

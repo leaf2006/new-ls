@@ -22,7 +22,7 @@ var actualFilePath string
 var MaxSizeLen int
 var MaxFileNameLen int
 
-func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool) ([]FileRow, error) {
+func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableByteOutput bool) ([]FileRow, error) {
 	// var FilePath string
 	if filepath != "" {
 		actualFilePath = filepath
@@ -35,7 +35,7 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool) ([]File
 		return nil, err
 	}
 
-	if enableEntrySimple == false {
+	if enableEntrySimple == false { // 详细输出
 		MaxSizeLen = 4
 		for _, file := range files {
 			if enableAllFiles == false && strings.HasPrefix(file.Name(), ".") {
@@ -43,7 +43,12 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool) ([]File
 			}
 
 			modeStr := FileMode(file)
-			sizeStr, timeStr := FileInfo(file, actualFilePath)
+			sizeStr, timeStr := FileInfo(file, actualFilePath, enableByteOutput)
+
+			// if enableByteOutput == false {
+			// 	sizeStr = FormatFileSize(sizeStr)
+			// }
+
 			isDirBool := file.IsDir()
 
 			// 更新最大宽度：如果当前文件大小字符串长度超过了目前的记录，就更新
@@ -62,7 +67,7 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool) ([]File
 			})
 		}
 		return Rows, nil
-	} else {
+	} else { // 简化输出
 		MaxFileNameLen = 8 //原来是8
 		for _, file := range files {
 			if enableAllFiles == false && strings.HasPrefix(file.Name(), ".") {
