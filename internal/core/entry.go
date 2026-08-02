@@ -2,9 +2,12 @@ package core
 
 import (
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/leaf2006/new-ls/internal/render"
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 )
 
 type FileRow struct {
@@ -38,6 +41,7 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableB
 	if enableEntrySimple == false { // 详细输出
 		MaxSizeLen = 4
 		for _, file := range files {
+			// 如果文件前带.就是隐藏文件，如果没有开-A就不显示
 			if enableAllFiles == false && strings.HasPrefix(file.Name(), ".") {
 				continue
 			}
@@ -66,6 +70,11 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableB
 				IsDir:   isDirBool,
 			})
 		}
+
+		fileSort := collate.New(language.English) // 暂且用English进行排序
+		sort.Slice(Rows, func(i, j int) bool {
+			return fileSort.CompareString(Rows[i].Name, Rows[j].Name) < 0
+		})
 		return Rows, nil
 	} else { // 简化输出
 		MaxFileNameLen = 8 //原来是8
@@ -87,6 +96,11 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableB
 				IsDir:   isDirBool,
 			})
 		}
+
+		fileSort := collate.New(language.English)
+		sort.Slice(Rows, func(i, j int) bool {
+			return fileSort.CompareString(Rows[i].Name, Rows[j].Name) < 0
+		})
 		return Rows, nil
 	}
 
