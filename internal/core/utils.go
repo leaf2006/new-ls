@@ -63,32 +63,3 @@ func FormatFileSize(bytesStr string) string {
 	return fmt.Sprintf("%.1f %s", val, suffix)
 
 }
-
-//TODO
-
-// 这里暂时弃用
-// func ColorFormatter(file os.DirEntry, isDir bool) string {
-// 	var (
-// 		isExecutable bool
-// 		// TitleColor       = color.New(color.FgHiGreen, color.Bold).SprintFunc()
-// 		ApplicationColor = color.New(color.FgHiGreen).SprintFunc()
-// 		FolderColor      = color.New(color.FgBlue).SprintFunc()
-// 		// FileColor        = color.New(color.FgWhite).SprintFunc()
-// 	)
-// 	fileName := file.Name()
-// 	info, _ := file.Info()
-// 	isExecutable = info.Mode().Perm()&0111 != 0 // 判断文件是否为可执行文件，如果是则值为true，反则为false
-// 	if isDir == true {
-// 		return FolderColor(fileName)
-// 	} else {
-// 		ext := strings.ToLower(filepath.Ext(file.Name()))
-// 		if runtime.GOOS == "windows" && ext == ".exe" || ext == ".msi" || ext == ".bat" || ext == ".cmd" || ext == ".ps1" {
-// 			return ApplicationColor(fileName)
-// 		} else {
-// 			if isExecutable == true {
-// 				return ApplicationColor(fileName)
-// 			}
-// 		}
-// 	}
-// 	return fileName
-// }

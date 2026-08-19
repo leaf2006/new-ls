@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/leaf2006/new-ls/internal/config"
 	"github.com/leaf2006/new-ls/internal/core"
 	"github.com/leaf2006/new-ls/internal/render"
 )
@@ -42,16 +43,21 @@ func SimpleOutput() {
 		if padding < 0 {
 			padding = 0
 		}
-
+		var EnableIcon string
+		if config.Global.Icon == true {
+			EnableIcon = row.Icon + " "
+		} else {
+			EnableIcon = ""
+		}
 		// 格式化输出
 		if namePrinter != nil {
 			// 彩色输出：图标 + 文件名 + 填充空格
-			namePrinter.Printf("%s %s", row.Icon, row.Name)
+			namePrinter.Printf("%s%s", EnableIcon, row.Name)
 			// 添加填充空格
 			fmt.Printf("%*s", padding, "")
 		} else {
 			// 非彩色输出
-			fmt.Printf("%s %s%*s", row.Icon, row.Name, padding, "")
+			fmt.Printf("%s%s%*s", EnableIcon, row.Name, padding, "")
 		}
 
 		// 换行条件：达到列数限制或最后一个元素

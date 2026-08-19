@@ -6,12 +6,13 @@ import (
 	"log"
 	"os"
 
+	"github.com/leaf2006/new-ls/internal/config" // nls全局设置
 	"github.com/leaf2006/new-ls/internal/core"
 	"github.com/leaf2006/new-ls/internal/output"
 	"github.com/urfave/cli/v3"
 )
 
-const version = "v0.0.3"
+const version = "v0.0.4"
 
 var (
 	Args                 cli.Args
@@ -20,6 +21,8 @@ var (
 )
 
 func Commands() {
+	config.Load()
+
 	cmd := &cli.Command{
 		Name:      "new-ls",
 		Usage:     "A beautiful,powershell-style ls tool built from Golang",
@@ -63,7 +66,7 @@ func Commands() {
 					enableOutputAllFiles = true
 				} // 输出所有文件/文件夹（输出隐藏文件）
 
-				if isByteOutput {
+				if isByteOutput || config.Global.ByteOutput == true {
 					enableByteOutput = true
 				} // 以字节形式输出文件大小，默认会以更符合人类日常习惯的方式输出
 

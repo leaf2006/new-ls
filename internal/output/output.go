@@ -7,6 +7,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/leaf2006/new-ls/internal/core"
 	"github.com/leaf2006/new-ls/internal/render"
+
+	"github.com/leaf2006/new-ls/internal/config"
 )
 
 var TitleColor = color.New(color.FgHiGreen, color.Bold)
@@ -26,11 +28,17 @@ func NormalOutput() {
 		fmt.Printf("%*s    ", core.MaxSizeLen, row.Size)
 
 		namePrinter = render.ColorFormatter(row.RawFile, row.IsDir, isSimpleColor)
+		var EnableIcon string
+		if config.Global.Icon == true {
+			EnableIcon = row.Icon + " "
+		} else {
+			EnableIcon = ""
+		}
 		if namePrinter != nil {
-			namePrinter.Printf("%s %s", row.Icon, row.Name)
+			namePrinter.Printf("%s%s", EnableIcon, row.Name)
 			fmt.Printf("\n") // 消除蓝色底色色块溢出的问题
 		} else {
-			fmt.Printf("%s %s\n", row.Icon, row.Name)
+			fmt.Printf("%s%s\n", EnableIcon, row.Name)
 		}
 	}
 }

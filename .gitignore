@@ -4,3 +4,5 @@ _main.go
 opencode.json
 _test/
 .vscode/
+run.sh
+build.sh
