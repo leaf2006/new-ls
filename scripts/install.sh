@@ -186,6 +186,49 @@ latest_go_version() {
 }
 
 # ---------------------------------------------------------------- build ----
+MIRROR_URLS=(
+  "https://goproxy.cn,direct"
+  "https://goproxy.io,direct"
+  "https://mirrors.aliyun.com/goproxy/,direct"
+  "https://mirrors.cloud.tencent.com/go/,direct"
+)
+MIRROR_NAMES=(
+  "https://goproxy.cn"
+  "https://goproxy.io"
+  "https://mirrors.aliyun.com/goproxy/"
+  "https://mirrors.cloud.tencent.com/go/"
+)
+
+select_mirror() {
+  local idx
+  while true; do
+    echo "" >&2
+    warn "国内可用的 Go 模块镜像源："
+    local i
+    for (( i=0; i<${#MIRROR_NAMES[@]}; i++ )); do
+      printf '  %d) %s\n' "$((i+1))" "${MIRROR_NAMES[$i]}" >&2
+    done
+    echo "" >&2
+    printf '\033[1;33m[nls]\033[0m 请输入编号 (1-%d) 选择镜像源: ' "${#MIRROR_NAMES[@]}" >&2
+    read -r idx
+    if [[ "$idx" =~ ^[1-4]$ ]]; then
+      echo "${MIRROR_URLS[$((idx-1))]}"
+      return 0
+    fi
+    warn "无效输入，请输入 1 到 ${#MIRROR_NAMES[@]} 之间的数字。"
+  done
+}
+
+try_build() {
+  local proxy="$1"
+  local out="$2"
+  if (cd "$PROJECT_DIR" && GOPROXY="$proxy" CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$out" ./cmd/new-ls 2>&1); then
+    return 0
+  else
+    return 1
+  fi
+}
+
 build_nls() {
   say "Building ${BINARY_NAME} ..."
   [[ -f "$PROJECT_DIR/go.mod" ]] \
@@ -193,14 +236,53 @@ build_nls() {
   local out
   out="$(mktemp "${TMPDIR:-/tmp}/nls-build.XXXXXX")"
   BUILD_TMP="$out"
-  if (cd "$PROJECT_DIR" && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$out" ./cmd/new-ls); then
-    ok "Build finished."
-    printf '%s\n' "$out"
-  else
+
+  local build_log
+
+  if [[ -n "${GOPROXY:-}" ]]; then
+    if try_build "$GOPROXY" "$out"; then
+      ok "Build finished."
+      printf '%s\n' "$out"
+      return 0
+    fi
     rm -f "$out"
     BUILD_TMP=""
-    die "Build failed. Make sure the Go toolchain works and proxy.golang.org is reachable."
+    die "Build failed. Check your GOPROXY setting ($GOPROXY) and network."
   fi
+
+  build_log="$(try_build "https://proxy.golang.org,direct" "$out" 2>&1)" && {
+    ok "Build finished."
+    printf '%s\n' "$out"
+    return 0
+  }
+
+  if echo "$build_log" | grep -qiE 'proxy\.golang\.org|connection refused|dial tcp|no such host|timeout|i/o timeout'; then
+    warn "无法连接 proxy.golang.org，可能是网络环境限制。"
+    printf '\033[1;33m[nls]\033[0m 是否切换为国内镜像源？[y/N] ' >&2
+    read -r ans
+    case "${ans:-N}" in
+      [yY]*) ;;
+      *)
+        rm -f "$out"
+        BUILD_TMP=""
+        die "Build failed. 请设置 GOPROXY 环境变量或配置网络后重试。"
+        ;;
+    esac
+
+    local selected_proxy
+    selected_proxy="$(select_mirror)"
+    say "使用镜像源: ${selected_proxy%%,*}"
+
+    if try_build "$selected_proxy" "$out"; then
+      ok "Build finished."
+      printf '%s\n' "$out"
+      return 0
+    fi
+  fi
+
+  rm -f "$out"
+  BUILD_TMP=""
+  die "Build failed. 请检查 Go 工具链和网络连接。"
 }
 
 # --------------------------------------------------------------- install ---
