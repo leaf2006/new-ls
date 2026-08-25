@@ -12,7 +12,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-const version = "v0.0.4"
+const version = "v0.0.5"
 
 var (
 	Args                 cli.Args
@@ -62,7 +62,7 @@ func Commands() {
 				enableOutputAllFiles = false
 				enableByteOutput = false
 
-				if isOutputAllFiles {
+				if isOutputAllFiles || config.Global.AllFile == true {
 					enableOutputAllFiles = true
 				} // 输出所有文件/文件夹（输出隐藏文件）
 
@@ -80,7 +80,7 @@ func Commands() {
 				// 	return err
 				// }
 
-				if isSimple {
+				if isSimple || config.Global.Simple == true {
 					enableEntrySimple = true
 					_, err := core.Entry(filepath, enableOutputAllFiles, enableEntrySimple, enableByteOutput) //传递至internal/core/entry.go
 					if err != nil {

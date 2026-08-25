@@ -8,8 +8,10 @@ import (
 )
 
 type Config struct {
-	Icon       bool `json:"enable_icon"` // 是否启用图标
-	ByteOutput bool `json:"byteOutput"`  // 是否启用字节输出
+	Icon       bool `json:"enable_icon"`            // 是否启用图标
+	ByteOutput bool `json:"byteOutput"`             // 是否启用字节输出
+	AllFile    bool `json:"enable_all_file_output"` // 是否启用默认显示隐藏文件
+	Simple     bool `json:"allways_simple_output"`  // 是否总是采用简单模式
 	// SortType   string `json:"sortType"` 暂时不需要
 }
 
@@ -19,6 +21,8 @@ func defaultConfig() Config {
 	return Config{
 		Icon:       true,
 		ByteOutput: false,
+		AllFile:    false,
+		Simple:     false,
 		// SortType:   "name",
 	}
 }
