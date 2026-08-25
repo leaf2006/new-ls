@@ -14,16 +14,18 @@ A beautiful,powershell 7-style new ls tool built from Golang
 
 ## 安装 / Install
 
-在仓库根目录运行（Linux / macOS，默认 bash）：
+前往<a href="https://github.com/leaf2006/new-ls/releases">Release页面</a>下载对应架构，操作系统的nls的可执行程序
 
-```bash
-./scripts/install.sh
-```
+nls目前支持：
 
-- 将本项目编译为 `nls` 并安装到 `/usr/local/bin`，之后可直接在 shell 输入 `nls` 使用。
-- 目标目录不可写时脚本会自动请求 `sudo`；也可用 `--prefix <dir>` 指定其它目录。
-- 电脑未安装 Go 时，脚本会询问是否自动下载官方 Go 工具链到用户缓存目录（`~/.cache/nls-install`，仅用于本次构建，不影响系统）；加 `--no-go-install` 可拒绝并看到手动安装指引。
-- 卸载：`./scripts/install.sh --uninstall`
+- Linux-amd64
+- Linux-arm64
+- Mac os (Apple Silicon)
+- Mac os (Intel)
+- Windows x86_64
+- Windows x86
+
+如果没有你的操作系统与架构，请Git clone本项目进行手动构建
 
 ## 用法 / Usage
 
@@ -39,7 +41,7 @@ nls [path...] [options]
 | --- | --- | --- |
 | `--help` | `-h` | 显示帮助信息 |
 | `--version` | `-v` | 仅输出版本信息 |
-| `--simple` | `-s` | 简单模式：仅文件名，多列自适应终端宽度 |
+| `--simple` | `-s` | 简单模式：仅文件名 |
 | `--All` | `-A` | 输出所有文件（包含隐藏文件） |
 | `--byte` | `-b` | 以字节形式输出文件大小（在 `-s` 模式下不可用） |
 
@@ -49,7 +51,7 @@ nls [path...] [options]
 nls                 # normal 输出当前目录
 nls /path/to/dir    # 输出指定目录
 nls -A              # 包含隐藏文件
-nls -s              # simple 模式
+nls -s              # 简单模式
 nls -b              # 以字节形式显示文件大小
 nls -v              # 输出版本信息
 ```
@@ -65,7 +67,8 @@ nls的配置项应该放置在以下目录：
 ```json
 {
     "enable_icon": true,
-    "byteOutput": false
+    "byteOutput": false,
+    "enable_all_file_output": true
 }
 ```
 
@@ -73,3 +76,5 @@ nls的配置项应该放置在以下目录：
 
 - enable_icon(bool)：是否启用图标显示（需要提前安装Nerd font字体），默认为true
 - byteOutput(bool)：文件大小是否以字节形式输出，默认为false
+- enable_all_file_output(bool)：是否默认输出隐藏文件，默认为false
+- allways_simple_output(bool)：是否默认总是采用简单模式，默认为false
