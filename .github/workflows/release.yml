@@ -1,0 +1,74 @@
+name: Build and Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            platform: linux-amd64
+            format: tar.gz
+            binary: nls
+          - goos: linux
+            goarch: arm64
+            platform: linux-arm64
+            format: tar.gz
+            binary: nls
+          - goos: windows
+            goarch: amd64
+            platform: windows-x86_64
+            format: zip
+            binary: nls.exe
+          - goos: windows
+            goarch: "386"
+            platform: windows-x86
+            format: zip
+            binary: nls.exe
+          - goos: darwin
+            goarch: amd64
+            platform: darwin-amd64
+            format: tar.gz
+            binary: nls
+          - goos: darwin
+            goarch: arm64
+            platform: darwin-arm64
+            format: tar.gz
+            binary: nls
+
+    steps:
+      - name: Checkout release source code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.6"
+
+      - name: Build binary
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -trimpath -ldflags="-s -w" -o ${{ matrix.binary }} ./cmd/new-ls/
+
+      - name: Package (tar.gz)
+        if: matrix.format == 'tar.gz'
+        run: tar -czf nls-${{ matrix.platform }}-${{ github.event.release.tag_name }}.tar.gz ${{ matrix.binary }} README.md LICENSE
+
+      - name: Package (zip)
+        if: matrix.format == 'zip'
+        run: zip nls-${{ matrix.platform }}-${{ github.event.release.tag_name }}.zip ${{ matrix.binary }} README.md LICENSE
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ github.event.release.tag_name }}" nls-${{ matrix.platform }}-${{ github.event.release.tag_name }}.${{ matrix.format }} --repo "${{ github.repository }}"
