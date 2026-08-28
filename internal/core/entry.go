@@ -4,6 +4,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/leaf2006/new-ls/internal/render"
 	"golang.org/x/text/collate"
@@ -14,6 +15,7 @@ type FileRow struct {
 	RawFile os.DirEntry
 	Mode    string
 	Time    string
+	ModTime time.Time // 修改时间原始值，用于 -t/-tr 按时间排序
 	Size    string
 	Name    string
 	Icon    string
@@ -25,7 +27,7 @@ var actualFilePath string
 var MaxSizeLen int
 var MaxFileNameLen int
 
-func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableByteOutput bool) ([]FileRow, error) {
+func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableByteOutput bool, enableTimeSort bool, timeNewestFirst bool) ([]FileRow, error) {
 	// var FilePath string
 	if filepath != "" {
 		actualFilePath = filepath
@@ -47,7 +49,7 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableB
 			}
 
 			modeStr := FileMode(file)
-			sizeStr, timeStr := FileInfo(file, actualFilePath, enableByteOutput)
+			sizeStr, timeStr, modTime := FileInfo(file, actualFilePath, enableByteOutput)
 
 			// if enableByteOutput == false {
 			// 	sizeStr = FormatFileSize(sizeStr)
@@ -64,6 +66,7 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableB
 				RawFile: file,
 				Mode:    modeStr,
 				Time:    timeStr,
+				ModTime: modTime,
 				Size:    sizeStr,
 				Name:    file.Name(),
 				Icon:    render.IconMap(file),
@@ -71,10 +74,7 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableB
 			})
 		}
 
-		fileSort := collate.New(language.English) // 暂且用English进行排序
-		sort.Slice(Rows, func(i, j int) bool {
-			return fileSort.CompareString(Rows[i].Name, Rows[j].Name) < 0
-		})
+		sortRows(enableTimeSort, timeNewestFirst)
 		return Rows, nil
 	} else { // 简化输出
 		MaxFileNameLen = 8 //原来是8
@@ -89,19 +89,43 @@ func Entry(filepath string, enableAllFiles bool, enableEntrySimple bool, enableB
 				MaxFileNameLen = len(fileName) + 2 // 为图标预留2个空位
 			}
 
+			var modTime time.Time
+			if enableTimeSort { // 仅在需要按时间排序时才获取修改时间，避免简单模式下的额外 stat 开销
+				if info, err := file.Info(); err == nil {
+					modTime = info.ModTime()
+				}
+			}
+
 			Rows = append(Rows, FileRow{
 				RawFile: file,
+				ModTime: modTime,
 				Name:    file.Name(),
 				Icon:    render.IconMap(file),
 				IsDir:   isDirBool,
 			})
 		}
 
-		fileSort := collate.New(language.English)
-		sort.Slice(Rows, func(i, j int) bool {
-			return fileSort.CompareString(Rows[i].Name, Rows[j].Name) < 0
-		})
+		sortRows(enableTimeSort, timeNewestFirst)
 		return Rows, nil
 	}
 
+}
+
+// sortRows 对 Rows 进行排序：默认按文件名排序；enableTimeSort 为 true 时按修改时间排序，
+// timeNewestFirst 为 true 表示新的在前（-t），false 表示旧的在前（-tr）。
+// 修改时间相同时回退为按文件名排序，保证输出顺序稳定。
+func sortRows(enableTimeSort bool, timeNewestFirst bool) {
+	fileSort := collate.New(language.English) // 暂且用English进行排序
+	sort.Slice(Rows, func(i, j int) bool {
+		if enableTimeSort {
+			ti, tj := Rows[i].ModTime, Rows[j].ModTime
+			if !ti.Equal(tj) {
+				if timeNewestFirst {
+					return ti.After(tj)
+				}
+				return ti.Before(tj)
+			}
+		}
+		return fileSort.CompareString(Rows[i].Name, Rows[j].Name) < 0
+	})
 }

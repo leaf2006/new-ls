@@ -6,9 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
-func FileInfo(file os.DirEntry, path string, enableByteOutput bool) (string, string) { // 文件大小 ， 文件上次修改时间
+func FileInfo(file os.DirEntry, path string, enableByteOutput bool) (string, string, time.Time) { // 文件大小 ， 文件上次修改时间 ， 修改时间原始值(用于按时间排序)
 	var fileName string
 
 	if path == "." {
@@ -21,7 +22,7 @@ func FileInfo(file os.DirEntry, path string, enableByteOutput bool) (string, str
 
 	if err != nil {
 		errorMessage := fmt.Sprintf("ERR:%s", err)
-		return errorMessage, errorMessage
+		return errorMessage, errorMessage, time.Time{}
 	}
 
 	timeFormatter := "2006/01/02 15:04"
@@ -30,13 +31,13 @@ func FileInfo(file os.DirEntry, path string, enableByteOutput bool) (string, str
 	lastWriteTime := lastWriteTimeRaw.Format(timeFormatter)
 
 	if file.IsDir() {
-		return "", lastWriteTime
+		return "", lastWriteTime, lastWriteTimeRaw
 	} else {
 		fileSize := strconv.FormatInt(info.Size(), 10) //10为转为十进制
 		if enableByteOutput == false {
 			fileSize = FormatFileSize(fileSize)
 		}
-		return fileSize, lastWriteTime
+		return fileSize, lastWriteTime, lastWriteTimeRaw
 	}
 }
 
