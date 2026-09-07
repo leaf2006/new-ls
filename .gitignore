@@ -6,3 +6,4 @@ _test/
 .vscode/
 run.sh
 build.sh
+bugs_example/
