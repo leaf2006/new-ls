@@ -86,6 +86,16 @@ func Commands() {
 				enableTimeSort := isTimeSort || isTimeReverse
 				timeNewestFirst := isTimeSort && !isTimeReverse
 
+				// 选择排序提示：-t/-tr 时给出对应键（仅在常规输出模式下打印），其余情况为空
+				var sortHintKey string
+				if enableTimeSort {
+					if timeNewestFirst {
+						sortHintKey = output.HintSortTimeNewest
+					} else {
+						sortHintKey = output.HintSortTimeOldest
+					}
+				}
+
 				var filepath string
 				var enableEntrySimple bool
 				if Args.Len() > 0 {
@@ -106,12 +116,12 @@ func Commands() {
 					return nil
 				}
 
-				enableEntrySimple = false                                                                                                        // normal output
+				enableEntrySimple = false                                                                                                  // normal output
 				_, err := core.Entry(filepath, enableOutputAllFiles, enableEntrySimple, enableByteOutput, enableTimeSort, timeNewestFirst) //传递至internal/core/entry.go
 				if err != nil {
 					return err
 				}
-				output.NormalOutput()
+				output.NormalOutput(sortHintKey)
 			}
 
 			return nil

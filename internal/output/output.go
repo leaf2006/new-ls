@@ -13,11 +13,12 @@ import (
 
 var TitleColor = color.New(color.FgHiGreen, color.Bold)
 
-func NormalOutput() {
+func NormalOutput(hintKey string) {
 	rows := core.Rows
 	if len(rows) > 0 {
 
 		isSimpleColor := false // 控制是否为简单输出，当前为正常输出，所以是false
+		printHint(hintKey)     // 在列表上方打印排序等提示信息（-t/-tr 时）
 		TitleColor.Printf("%-10s    %-16s    %-*s    %s\n", "Mode", "LastWriteTime", core.MaxSizeLen, "Size", "Name")
 		dashSize := strings.Repeat("-", core.MaxSizeLen)
 		TitleColor.Printf("%-10s    %-16s    %-*s    %s\n", "----", "-------------", core.MaxSizeLen, dashSize, "----")
