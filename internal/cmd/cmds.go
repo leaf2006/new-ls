@@ -12,7 +12,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-const version = "v0.0.5"
+const version = "v0.0.6"
 
 var (
 	Args                 cli.Args
